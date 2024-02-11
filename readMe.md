@@ -1,8 +1,8 @@
 # CS-555 Run Instructions
 
-## Matthew Van Soelen | 02/05/2024
+## Matthew Van Soelen, Cameron Sonn, and Ehimare Agboneni
 
-The project 2 python program can be run by:
+The project 3 python program can be run by:
 
 1. Download the python program and ged file you would like to test.
 2. Open a terminal and change directory to the folder containing the python program.
