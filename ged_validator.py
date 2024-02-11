@@ -212,11 +212,14 @@ print(f"Reading from file: {filename}")
 prev_result = {"level": "top level", "tag": "NOTE", "arguments": "-1"}
 valid_letter = ""
 input_list = []
-with open(filename, "r") as fstream:
-    for line in fstream:
-        line = line.strip()
-        result = parse_input(line)
-        input_list.append(result)
+try:
+    with open(filename, "r") as fstream:
+        for line in fstream:
+            line = line.strip()
+            result = parse_input(line)
+            input_list.append(result)
+except:
+    print(f"Unable to open file: {filename}")
 
 for i, result in enumerate(input_list):
     if i == 0:
