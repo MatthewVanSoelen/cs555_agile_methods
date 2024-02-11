@@ -115,7 +115,10 @@ valid_tags = {
 
 import re
 from datetime import datetime
+from datetime import date
 import sys
+from prettytable import PrettyTable
+import pdb
 
 
 def parse_input(input_str: str):
@@ -204,6 +207,161 @@ def is_valid(cur_line, prev_line_tag):
     return True
 
 
+def find_parent(input_list):
+    for i, result in enumerate(input_list):
+        if i == 0:
+            input_list[i].update({"belongs_to": "top level"})
+            continue
+        cur_level = result["level"]
+        prev_level = input_list[i - 1]["level"]
+        x = 0
+        while (
+            (cur_level <= prev_level) or (input_list[i - 1 - x]["tag"] == "NOTE")
+        ) and ((i - 1 - x) >= 0):
+            x += 1
+            prev_level = input_list[i - 1 - x]["level"]
+
+        if (i - 1 - x) < 0:
+            if cur_level == "0":
+                input_list[i].update({"belongs_to": "top level"})
+            else:
+                input_list[i].update({"belongs_to": "Unknown"})
+        else:
+            input_list[i].update({"belongs_to": input_list[i - 1 - x]["tag"]})
+        valid_status = is_valid(result, result["belongs_to"])
+        valid_letter = "Y" if valid_status else "N"
+        input_list[i].update({"is_valid": valid_letter})
+
+
+def create_individual_table(input_list, valid_tags):
+    indi_table = []
+
+    for i, line in enumerate(input_list):
+        if line["level"] == "0" and line["tag"] == "INDI":
+            uid = line["arguments"]
+            indi_table.append({"uid": uid})
+            x = i + 1
+            while len(input_list) > x and input_list[x]["level"] != "0":
+                if (input_list[x]["tag"] in valid_tags["DATE"]["belongs_to"]) and len(
+                    input_list
+                ) > x + 1:
+                    indi_table[-1].update(
+                        {input_list[x]["tag"]: input_list[x + 1]["arguments"]}
+                    )
+                    x += 1
+                else:
+                    indi_table[-1].update(
+                        {input_list[x]["tag"]: input_list[x]["arguments"]}
+                    )
+                x += 1
+            spouse = ""
+            if "FAMS" in indi_table[-1].keys():
+                spouse = indi_table[-1]["FAMS"]
+            else:
+                spouse = "NA"
+            indi_table[-1].update({"FAMS": spouse})
+
+            child = ""
+            if "FAMC" in indi_table[-1].keys():
+                child = indi_table[-1]["FAMC"]
+            else:
+                child = "NA"
+            indi_table[-1].update({"FAMC": child})
+
+            death = ""
+            if "DEAT" in indi_table[-1].keys():
+                death = indi_table[-1]["DEAT"]
+            else:
+                death = "NA"
+            indi_table[-1].update({"DEAT": death})
+
+            alive = ""
+            if death == "NA":
+                alive = True
+            else:
+                alive = False
+            indi_table[-1].update({"ALIVE": alive})
+
+            age = ""
+            if "BIRT" in indi_table[-1].keys():
+                today = date.today()
+                age = (
+                    today.year
+                    - datetime.strptime(indi_table[-1]["BIRT"], "%d %b %Y").year
+                )
+            else:
+                age = "NA"
+            indi_table[-1].update({"AGE": age})
+
+    return indi_table
+
+
+def create_family_table(input_list, valid_tags, indi_table):
+    fam_table = []
+
+    for i, line in enumerate(input_list):
+        if line["level"] == "0" and line["tag"] == "FAM":
+            uid = line["arguments"]
+            fam_table.append({"uid": uid})
+            x = i + 1
+
+            while len(input_list) > x and input_list[x]["level"] != "0":
+                if (input_list[x]["tag"] in valid_tags["DATE"]["belongs_to"]) and len(
+                    input_list
+                ) > x + 1:
+                    fam_table[-1].update(
+                        {input_list[x]["tag"]: input_list[x + 1]["arguments"]}
+                    )
+                    x += 1
+                else:
+                    fam_table[-1].update(
+                        {input_list[x]["tag"]: input_list[x]["arguments"]}
+                    )
+                x += 1
+            marriage = ""
+            if "MARR" in fam_table[-1].keys():
+                marriage = fam_table[-1]["MARR"]
+            else:
+                marriage = "NA"
+            fam_table[-1].update({"MARR": marriage})
+
+            divorce = ""
+            if "DIV" in fam_table[-1].keys():
+                divorce = fam_table[-1]["DIV"]
+            else:
+                divorce = "NA"
+            fam_table[-1].update({"DIV": divorce})
+
+            husb_name = next(
+                person
+                for person in indi_table
+                if person["uid"] == fam_table[-1]["HUSB"]
+            )["NAME"]
+            if not husb_name:
+                husb_name = "NA"
+            fam_table[-1].update({"HUSB_NAME": husb_name})
+
+            wife_name = next(
+                person
+                for person in indi_table
+                if person["uid"] == fam_table[-1]["WIFE"]
+            )["NAME"]
+            if not wife_name:
+                wife_name = "NA"
+            fam_table[-1].update({"WIFE_NAME": wife_name})
+
+            children = list(
+                filter(lambda child: child["FAMC"] == fam_table[-1]["uid"], indi_table)
+            )
+            for i, child in enumerate(children):
+                children[i] = child["uid"]
+            if len(children) < 1:
+                children = "NA"
+            fam_table[-1].update({"CHILDREN": children})
+
+    return fam_table
+
+
 filename = "simple_sample.ged"
 if len(sys.argv) > 1:
     filename = sys.argv[1]
@@ -221,30 +379,63 @@ try:
 except:
     print(f"Unable to open file: {filename}")
 
-for i, result in enumerate(input_list):
-    if i == 0:
-        input_list[i].update({"belongs_to": "top level"})
-        continue
-    cur_level = result["level"]
-    prev_level = input_list[i - 1]["level"]
-    x = 0
-    while ((cur_level <= prev_level) or (input_list[i - 1 - x]["tag"] == "NOTE")) and (
-        (i - 1 - x) >= 0
-    ):
-        x += 1
-        prev_level = input_list[i - 1 - x]["level"]
+find_parent(input_list)
 
-    if (i - 1 - x) < 0:
-        if cur_level == "0":
-            input_list[i].update({"belongs_to": "top level"})
-        else:
-            input_list[i].update({"belongs_to": "Unknown"})
-    else:
-        input_list[i].update({"belongs_to": input_list[i - 1 - x]["tag"]})
-    valid_status = is_valid(result, result["belongs_to"])
-    valid_letter = "Y" if valid_status else "N"
-    input_list[i].update({"is_valid": valid_letter})
-    print(f"--> {result['original']}")
-    print(
-        f"<-- {result['level']} | {result['tag']} | {result['is_valid']} | {result['arguments']}"
+
+indi_pretty = PrettyTable()
+indi_pretty.field_names = [
+    "ID",
+    "Name",
+    "Gender",
+    "Birthday",
+    "Age",
+    "Alive",
+    "Death",
+    "Child",
+    "Spouse",
+]
+indi_table = create_individual_table(input_list, valid_tags)
+for person in indi_table:
+    indi_pretty.add_row(
+        [
+            person["uid"],
+            person["NAME"],
+            person["SEX"],
+            person["BIRT"],
+            person["AGE"],
+            person["ALIVE"],
+            person["DEAT"],
+            person["FAMC"],
+            person["FAMS"],
+        ]
     )
+print("Individuals")
+print(indi_pretty)
+
+fam_pretty = PrettyTable()
+fam_pretty.field_names = [
+    "ID",
+    "Married",
+    "Divorced",
+    "Husband ID",
+    "Husband Name",
+    "Wife ID",
+    "Wife Name",
+    "Children",
+]
+fam_table = create_family_table(input_list, valid_tags, indi_table)
+for person in fam_table:
+    fam_pretty.add_row(
+        [
+            person["uid"],
+            person["MARR"],
+            person["DIV"],
+            person["HUSB"],
+            person["HUSB_NAME"],
+            person["WIFE"],
+            person["WIFE_NAME"],
+            person["CHILDREN"],
+        ]
+    )
+print("Families")
+print(fam_pretty)
