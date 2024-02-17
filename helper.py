@@ -1,6 +1,7 @@
 from datetime import datetime
 from datetime import date
 from prettytable import PrettyTable
+import pymongo
 
 
 def parse_input(input_str: str):
@@ -244,7 +245,7 @@ def create_family_table(input_list, valid_tags, indi_table):
     return fam_table
 
 
-def create_pretty_indi_table(indi_table):
+def create_pretty_indi_table(db_collection):
     indi_pretty = PrettyTable()
     indi_pretty.field_names = [
         "ID",
@@ -257,7 +258,8 @@ def create_pretty_indi_table(indi_table):
         "Child",
         "Spouse",
     ]
-    for person in indi_table:
+
+    for person in db_collection.find():
         indi_pretty.add_row(
             [
                 person["uid"],
@@ -274,7 +276,7 @@ def create_pretty_indi_table(indi_table):
     return indi_pretty
 
 
-def create_pretty_fam_table(fam_table):
+def create_pretty_fam_table(db_collection):
     fam_pretty = PrettyTable()
     fam_pretty.field_names = [
         "ID",
@@ -287,7 +289,7 @@ def create_pretty_fam_table(fam_table):
         "Children",
     ]
 
-    for person in fam_table:
+    for person in db_collection.find():
         fam_pretty.add_row(
             [
                 person["uid"],
@@ -303,14 +305,12 @@ def create_pretty_fam_table(fam_table):
     return fam_pretty
 
 
-def db_insert(db_collection, indi_table):
-    print("Inserting individuals into DB")
-    for person in indi_table:
+def db_insert(db_collection, data_table):
+    for row in data_table:
         try:
-            result = db_collection.insert_one(person)
-            print(f"Inserted: {person['uid']}")
+            result = db_collection.insert_one(row)
         except:
-            print(f"Error: Failed to insert: {person['uid']}!")
+            print(f"Error: Failed to insert: {result.inserted_id}!")
 
 
 valid_tags = {

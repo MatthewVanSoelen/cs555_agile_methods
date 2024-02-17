@@ -20,8 +20,14 @@ print(f"Reading from file: {filename}")
 
 # Create connection to local MongoDB server
 client = pymongo.MongoClient("mongodb://localhost:27017/")
+client.drop_database("cs555_db")
 database = client["cs555_db"]
-db_collection = database["people"]
+
+db_indi_col = database["people"]
+db_indi_col.create_index({"uid": 1}, unique=True)
+
+db_fam_col = database["families"]
+
 
 # Read file lines into an array
 input_list = []
@@ -36,13 +42,14 @@ except:
 
 find_parent(input_list)
 indi_table = create_individual_table(input_list, valid_tags)
-db_insert(db_collection, indi_table)
+db_insert(db_indi_col, indi_table)
 
-indi_pretty = create_pretty_indi_table(indi_table)
-# print("Individuals")
-# print(indi_pretty)
+indi_pretty = create_pretty_indi_table(db_indi_col)
+print("Individuals")
+print(indi_pretty)
 
 fam_table = create_family_table(input_list, valid_tags, indi_table)
-fam_pretty = create_pretty_fam_table(fam_table)
-# print("Families")
-# print(fam_pretty)
+db_insert(db_fam_col, fam_table)
+fam_pretty = create_pretty_fam_table(db_fam_col)
+print("Families")
+print(fam_pretty)
