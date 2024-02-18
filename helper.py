@@ -180,11 +180,20 @@ def create_individual_table(input_list, valid_tags):
 
             age = ""
             if "BIRT" in indi_table[-1].keys():
-                today = date.today()
-                age = (
-                    today.year
-                    - datetime.strptime(indi_table[-1]["BIRT"], "%d %b %Y").year
-                )
+                if indi_table[-1]["DEAT"] != "NA":
+                    death = datetime.strptime(indi_table[-1]["DEAT"], "%d %b %Y")
+                    age = (
+                        death.year
+                        - datetime.strptime(indi_table[-1]["BIRT"], "%d %b %Y").year
+                    )
+                else:
+                    today = date.today()
+                    age = (
+                        today.year
+                        - datetime.strptime(indi_table[-1]["BIRT"], "%d %b %Y").year
+                    )
+                if age < 0:
+                    age = "NA"
             else:
                 age = "NA"
             indi_table[-1].update({"AGE": age})
@@ -342,6 +351,7 @@ people_schema = {
             "ALIVE",
             "AGE",
         ],
+        "properties": {"AGE": {"bsonType": "int"}},
     }
 }
 
