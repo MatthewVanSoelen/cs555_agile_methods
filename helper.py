@@ -17,6 +17,16 @@ def file_to_array(filename):
     return input_list
 
 
+def read_error_file():
+    input_list = []
+    try:
+        with open("errors.txt", "r") as fstream:
+            for line in fstream:
+                print(line)
+    except:
+        print(f"Unable to open file error.txt")
+
+
 def parse_input(input_str: str):
     if (input_str is None) or (len(input_str) < 1):
         return {"tag": "Error: No input Provided", "level": "", "arguments": ""}
@@ -331,9 +341,22 @@ def db_insert(db_collection, data_table):
     for row in data_table:
         try:
             result = db_collection.insert_one(row)
-        except Exception as error:
-            print(f"Error: Failed to insert: {row}!")
-            raise error
+        except pymongo.errors.DuplicateKeyError as error:
+            msg = ""
+            if "NAME_1_BIRT_1" in str(error):
+                msg = "Error: INDIVIDUAL: US23: No more than one individual with the same name and birth date should appear in a GEDCOM file"
+
+            with open("errors.txt", "a") as errorFile:
+                errorFile.write(msg)
+            continue
+        except pymongo.errors.WriteError as error:
+            msg = ""
+            if "AGE" in str(error):
+                msg = "Error: INDIVIDUAL: US27: Include person's current age when listing individuals"
+
+            with open("errors.txt", "a") as errorFile:
+                errorFile.write(f"{msg}\n")
+            continue
 
 
 people_schema = {

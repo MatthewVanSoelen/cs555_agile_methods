@@ -1,11 +1,12 @@
 """
 Matthew Van Soelen 
 CS-555 Agile Methods
-Project 2: GEDCOM Data
+Project 4: GEDCOM Data
 
 This program will read a GEBCOM file print the following for each line:
 --> <input line>
 <-- <level>|<tag>|<valid?> : Y or N|<arguments>
+Stories: us23, us27
 """
 
 import sys
@@ -17,6 +18,9 @@ filename = "simple_sample.ged"
 if len(sys.argv) > 1:
     filename = sys.argv[1]
 print(f"Reading from file: {filename}")
+
+errorFile = open("errors.txt", "w")
+errorFile.close()
 
 # Create connection to local MongoDB server
 client = pymongo.MongoClient("mongodb://localhost:27017/")
@@ -46,3 +50,5 @@ db_insert(db_fam_col, fam_table)
 fam_pretty = create_pretty_fam_table(db_fam_col)
 print("Families")
 print(fam_pretty)
+
+read_error_file()

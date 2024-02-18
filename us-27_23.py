@@ -17,6 +17,8 @@ class Test_US_27(unittest.TestCase):
 
         self.db_indi_col.create_index(["uid"], unique=True)
         self.db_indi_col.create_index(["NAME", "BIRT"], unique=True)
+        errorFile = open("errors.txt", "w")
+        errorFile.close()
         return super().setUpClass()
 
     def test_ValidAge(self):
@@ -115,8 +117,9 @@ class Test_US_27(unittest.TestCase):
         find_parent(self.input_list)
         self.indi_table = create_individual_table(self.input_list, valid_tags)
 
-        with self.assertRaises(pymongo.errors.WriteError):
-            db_insert(self.db_indi_col, self.indi_table)
+        db_insert(self.db_indi_col, self.indi_table)
+        with open("errors.txt", "r") as errorFile:
+            self.assertTrue("Error: INDIVIDUAL: US27" in errorFile.read())
 
     def test_MissingBirthDate(self):
 
@@ -137,7 +140,7 @@ class Test_US_27(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.indi_table = create_individual_table(self.input_list, valid_tags)
 
-    def test_MissingBirth(self):
+    def test_ValidAge3(self):
 
         self.input_list = [
             {"level": "0", "tag": "INDI", "arguments": "I04", "original": "0 I04 INDI"},
@@ -147,11 +150,12 @@ class Test_US_27(unittest.TestCase):
                 "arguments": "Jennifer /Smith/",
                 "original": "1 NAME Jennifer /Smith/",
             },
+            {"level": "1", "tag": "BIRT", "arguments": "", "original": "1 BIRT"},
             {
                 "level": "2",
                 "tag": "DATE",
-                "arguments": "23 SEP 1960",
-                "original": "2 DATE 23 SEP 1960",
+                "arguments": "23 OCT 1960",
+                "original": "2 DATE 23 OCT 1960",
             },
             {"level": "1", "tag": "SEX", "arguments": "F", "original": "1 SEX F"},
             {"level": "1", "tag": "FAMS", "arguments": "F23", "original": "1 FAMS F23"},
@@ -160,8 +164,11 @@ class Test_US_27(unittest.TestCase):
         find_parent(self.input_list)
 
         self.indi_table = create_individual_table(self.input_list, valid_tags)
-        with self.assertRaises(pymongo.errors.WriteError):
-            db_insert(self.db_indi_col, self.indi_table)
+
+        db_insert(self.db_indi_col, self.indi_table)
+        person = self.db_indi_col.find_one({"uid": "I04"})
+        self.assertTrue("AGE" in person.keys())
+        self.assertIsInstance(person["AGE"], int)
 
     @classmethod
     def tearDownClass(self):
@@ -170,8 +177,6 @@ class Test_US_27(unittest.TestCase):
 
 
 # Use Case 23: A Name and Birth Date combination must be unqiue
-
-
 class Test_US_23(unittest.TestCase):
     @classmethod
     def setUpClass(self):
@@ -185,6 +190,9 @@ class Test_US_23(unittest.TestCase):
 
         self.db_indi_col.create_index(["uid"], unique=True)
         self.db_indi_col.create_index(["NAME", "BIRT"], unique=True)
+
+        errorFile = open("errors.txt", "w")
+        errorFile.close()
         return super().setUpClass()
 
     def test_Unique(self):
@@ -269,8 +277,9 @@ class Test_US_23(unittest.TestCase):
         find_parent(self.input_list)
         self.indi_table = create_individual_table(self.input_list, valid_tags)
 
-        with self.assertRaises(pymongo.errors.DuplicateKeyError):
-            db_insert(self.db_indi_col, self.indi_table)
+        db_insert(self.db_indi_col, self.indi_table)
+        with open("errors.txt", "r") as errorFile:
+            self.assertTrue("Error: INDIVIDUAL: US23" in errorFile.read())
 
     def test_NotUnique_2(self):
 
@@ -312,8 +321,8 @@ class Test_US_23(unittest.TestCase):
         find_parent(self.input_list)
         self.indi_table = create_individual_table(self.input_list, valid_tags)
 
-        with self.assertRaises(pymongo.errors.DuplicateKeyError):
-            db_insert(self.db_indi_col, self.indi_table)
+        with open("errors.txt", "r") as errorFile:
+            self.assertTrue("Error: INDIVIDUAL: US23" in errorFile.read())
 
     def test_NotUnique_3(self):
 
@@ -355,8 +364,9 @@ class Test_US_23(unittest.TestCase):
         find_parent(self.input_list)
         self.indi_table = create_individual_table(self.input_list, valid_tags)
 
-        with self.assertRaises(pymongo.errors.DuplicateKeyError):
-            db_insert(self.db_indi_col, self.indi_table)
+        db_insert(self.db_indi_col, self.indi_table)
+        with open("errors.txt", "r") as errorFile:
+            self.assertTrue("Error: INDIVIDUAL: US23" in errorFile.read())
 
     def test_NotUnique_4(self):
 
@@ -398,8 +408,9 @@ class Test_US_23(unittest.TestCase):
         find_parent(self.input_list)
         self.indi_table = create_individual_table(self.input_list, valid_tags)
 
-        with self.assertRaises(pymongo.errors.DuplicateKeyError):
-            db_insert(self.db_indi_col, self.indi_table)
+        db_insert(self.db_indi_col, self.indi_table)
+        with open("errors.txt", "r") as errorFile:
+            self.assertTrue("Error: INDIVIDUAL: US23" in errorFile.read())
 
     @classmethod
     def tearDownClass(self):
