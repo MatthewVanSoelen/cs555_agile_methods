@@ -1,5 +1,5 @@
 """
-Matthew Van Soelen 
+Matthew Van Soelen, Cameron Sonn and Ehimare Agboneni
 CS-555 Agile Methods
 Project 4: GEDCOM Data
 
