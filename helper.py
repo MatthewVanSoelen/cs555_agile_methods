@@ -4,6 +4,19 @@ from prettytable import PrettyTable
 import pymongo
 
 
+def file_to_array(filename):
+    input_list = []
+    try:
+        with open(filename, "r") as fstream:
+            for line in fstream:
+                line = line.strip()
+                result = parse_input(line)
+                input_list.append(result)
+    except:
+        print(f"Unable to open file: {filename}")
+    return input_list
+
+
 def parse_input(input_str: str):
     if (input_str is None) or (len(input_str) < 1):
         return {"tag": "Error: No input Provided", "level": "", "arguments": ""}
@@ -309,9 +322,28 @@ def db_insert(db_collection, data_table):
     for row in data_table:
         try:
             result = db_collection.insert_one(row)
-        except:
-            print(f"Error: Failed to insert: {result.inserted_id}!")
+        except Exception as error:
+            print(f"Error: Failed to insert: {row}!")
+            raise error
 
+
+people_schema = {
+    "$jsonSchema": {
+        "bsonType": "object",
+        "additionalProperties": True,
+        "required": [
+            "uid",
+            "NAME",
+            "BIRT",
+            "SEX",
+            "FAMS",
+            "DEAT",
+            "FAMC",
+            "ALIVE",
+            "AGE",
+        ],
+    }
+}
 
 valid_tags = {
     "INDI": {

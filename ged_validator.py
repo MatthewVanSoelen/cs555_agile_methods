@@ -23,27 +23,20 @@ client = pymongo.MongoClient("mongodb://localhost:27017/")
 client.drop_database("cs555_db")
 database = client["cs555_db"]
 
-db_indi_col = database["people"]
-db_indi_col.create_index({"uid": 1}, unique=True)
+db_indi_col = database.create_collection("people", validator=people_schema)
+
+db_indi_col.create_index(["uid"], unique=True)
+db_indi_col.create_index(["NAME", "BIRT"], unique=True)
 
 db_fam_col = database["families"]
 
 
 # Read file lines into an array
-input_list = []
-try:
-    with open(filename, "r") as fstream:
-        for line in fstream:
-            line = line.strip()
-            result = parse_input(line)
-            input_list.append(result)
-except:
-    print(f"Unable to open file: {filename}")
+input_list = file_to_array(filename)
 
 find_parent(input_list)
 indi_table = create_individual_table(input_list, valid_tags)
 db_insert(db_indi_col, indi_table)
-
 indi_pretty = create_pretty_indi_table(db_indi_col)
 print("Individuals")
 print(indi_pretty)
