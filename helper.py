@@ -380,8 +380,18 @@ def list_all_deceased(indi_table):
     with open("errors.txt", "a") as errorFile:
                 errorFile.write(f"{"List of all deceased individuals US29: "}\n")
                 errorFile.write(f"{deceased_list}\n")
+    return deceased_list
     # print("List of all deceased individuals: ")
     # print(deceased_list)
+
+def detect_duplicate_uid(indi_table):
+    seen_uids = set()
+    for d in indi_table:
+        uid = d.get("uid")
+        if uid in seen_uids:
+            return True  # Found a duplicate uid
+        seen_uids.add(uid)
+    return False  # No duplicate uid found
 
 
 
