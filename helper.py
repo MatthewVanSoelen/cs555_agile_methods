@@ -145,7 +145,17 @@ def create_individual_table(input_list, valid_tags):
     for i, line in enumerate(input_list):
         if line["level"] == "0" and line["tag"] == "INDI":
             uid = line["arguments"]
-            indi_table.append({"uid": uid})
+            #check to see if the unique id already exists in indi_table
+            uid_exists = any(d.get("uid") == uid for d in indi_table)
+            #if it does then log the error
+            if(uid_exists):
+                msg = "Error: INDIVIDUAL: US22: Unique ID already exists. Duplicate not allowed."
+                with open("errors.txt", "a") as errorFile:
+                    errorFile.write(f"{msg}\n")
+                indi_table.append({"uid": uid})
+                #continue
+            else:
+                indi_table.append({"uid": uid})
             x = i + 1
             while len(input_list) > x and input_list[x]["level"] != "0":
                 if (input_list[x]["tag"] in valid_tags["DATE"]["belongs_to"]) and len(
@@ -345,6 +355,8 @@ def db_insert(db_collection, data_table):
             msg = ""
             if "NAME_1_BIRT_1" in str(error):
                 msg = "Error: INDIVIDUAL: US23: No more than one individual with the same name and birth date should appear in a GEDCOM file"
+            elif "uid" in str(error):
+                msg = "Error: INDIVIDUAL: US22: No more than one individual with the same unique ID should appear in a GEDCOM file"
 
             with open("errors.txt", "a") as errorFile:
                 errorFile.write(msg)
@@ -357,6 +369,18 @@ def db_insert(db_collection, data_table):
             with open("errors.txt", "a") as errorFile:
                 errorFile.write(f"{msg}\n")
             continue
+
+def list_all_deceased(indi_table):
+    deceased_list = []
+    for person in indi_table:
+        curr_name = person["NAME"]
+        curr_alive = person["ALIVE"]
+        if(curr_alive == False):
+            deceased_list.append(curr_name)
+    print("List of all deceased individuals: ")
+    print(deceased_list)
+
+
 
 
 people_schema = {
@@ -375,6 +399,25 @@ people_schema = {
             "AGE",
         ],
         "properties": {"AGE": {"bsonType": "int"}},
+    }
+}
+
+family_schema = {
+    "$jsonSchema": {
+        "bsonType": "object",
+        # "additionalProperties": True,
+        # "required": [
+        #     "uid",
+        #     "MARR",
+        #     "HUSB",
+        #     "WIFE",
+        #     "CHIL",
+        #     "DIV",
+        #     "HUS_NAME",
+        #     "WIFE_NAME",
+        #     "CHILDREN",
+        # ],
+        #"properties": {"AGE": {"bsonType": "int"}},
     }
 }
 
