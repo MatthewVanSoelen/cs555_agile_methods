@@ -32,7 +32,11 @@ db_indi_col = database.create_collection("people", validator=people_schema)
 db_indi_col.create_index(["uid"], unique=True)
 db_indi_col.create_index(["NAME", "BIRT"], unique=True)
 
-db_fam_col = database["families"]
+#db_fam_col = database["families"]
+
+#TODO: fix the required fields in the family_schema validator 
+db_fam_col = database.create_collection("families", validator=family_schema)
+db_fam_col.create_index(["uid"], unique=True)
 
 
 # Read file lines into an array
@@ -42,7 +46,7 @@ find_parent(input_list)
 indi_table = create_individual_table(input_list, valid_tags)
 db_insert(db_indi_col, indi_table)
 indi_pretty = create_pretty_indi_table(db_indi_col)
-print("Individuals")
+list_all_deceased(indi_table)
 print(indi_pretty)
 
 fam_table = create_family_table(input_list, valid_tags, indi_table)
