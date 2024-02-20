@@ -54,5 +54,7 @@ db_insert(db_fam_col, fam_table)
 fam_pretty = create_pretty_fam_table(db_fam_col)
 print("Families")
 print(fam_pretty)
-
+check_age(indi_table)
+check_husband_gender(indi_table, fam_table)
+check_wife_gender(indi_table, fam_table)
 read_error_file()
