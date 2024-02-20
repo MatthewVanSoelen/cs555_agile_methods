@@ -378,7 +378,7 @@ def list_all_deceased(indi_table):
         if(curr_alive == False):
             deceased_list.append(curr_name)
     with open("errors.txt", "a") as errorFile:
-                errorFile.write(f"{"List of all deceased individuals US29: "}\n")
+                errorFile.write(f"List of all deceased individuals US29: \n")
                 errorFile.write(f"{deceased_list}\n")
     return deceased_list
     # print("List of all deceased individuals: ")
