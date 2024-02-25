@@ -104,11 +104,10 @@ def is_valid(cur_line, prev_line_tag):
                 "error: 6 - Either no argument was provided or the date format contains a leading 0"
             )
             return False
-        try:
-            datetime.strptime(cur_line["arguments"], "%d %b %Y")
-        except:
+
+        if (not get_date(cur_line["arguments"], validation_only=True)):
             print("error: 7 - The date does not follow the required format.")
-            return False
+            return False            
 
     return True
 
@@ -137,6 +136,22 @@ def find_parent(input_list):
         valid_status = is_valid(result, result["belongs_to"])
         valid_letter = "Y" if valid_status else "N"
         input_list[i].update({"is_valid": valid_letter})
+
+def get_date(input_str, validation_only=False):
+    # Accept multiple date formats (YYYY), (MMM, YYYY), (D MMM YYYY)
+    for fmt in ("%d %b %Y", "%b %Y", "%Y"):
+        try:
+            if(validation_only):
+                return True
+            return datetime.strptime(input_str, fmt)
+        except:
+            pass
+    if(validation_only):
+        return False
+
+    with open("errors.txt", "a") as errorFile:
+        errorFile.write(f"Invalid Date Found: {input_str}. Substituing minimum date {datetime.min}")
+    return datetime.min
 
 
 def create_individual_table(input_list, valid_tags):
@@ -201,21 +216,15 @@ def create_individual_table(input_list, valid_tags):
             age = ""
             if "BIRT" in indi_table[-1].keys():
                 if indi_table[-1]["DEAT"] != "NA":
-                    death = datetime.strptime(indi_table[-1]["DEAT"], "%d %b %Y")
-                    age = (
-                        death.year
-                        - datetime.strptime(indi_table[-1]["BIRT"], "%d %b %Y").year
-                    )
+                    death = get_date(indi_table[-1]["DEAT"])
+                    age = ( death.year - get_date(indi_table[-1]["BIRT"]).year )
                 else:
                     today = date.today()
-                    age = (
-                        today.year
-                        - datetime.strptime(indi_table[-1]["BIRT"], "%d %b %Y").year
-                    )
+                    age = ( today.year - get_date(indi_table[-1]["BIRT"]).year )
                 if age < 0:
-                    age = "NA"
+                    age = -100
             else:
-                age = "NA"
+                age = -100
             indi_table[-1].update({"AGE": age})
 
     return indi_table
