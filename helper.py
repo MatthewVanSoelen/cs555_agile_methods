@@ -145,15 +145,15 @@ def create_individual_table(input_list, valid_tags):
     for i, line in enumerate(input_list):
         if line["level"] == "0" and line["tag"] == "INDI":
             uid = line["arguments"]
-            #check to see if the unique id already exists in indi_table
+            # check to see if the unique id already exists in indi_table
             uid_exists = any(d.get("uid") == uid for d in indi_table)
-            #if it does then log the error
-            if(uid_exists):
+            # if it does then log the error
+            if uid_exists:
                 msg = "Error: INDIVIDUAL: US22: Unique ID already exists. Duplicate not allowed."
                 with open("errors.txt", "a") as errorFile:
                     errorFile.write(f"{msg}\n")
                 indi_table.append({"uid": uid})
-                #continue
+                # continue
             else:
                 indi_table.append({"uid": uid})
             x = i + 1
@@ -370,19 +370,21 @@ def db_insert(db_collection, data_table):
                 errorFile.write(f"{msg}\n")
             continue
 
+
 def list_all_deceased(indi_table):
     deceased_list = []
     for person in indi_table:
         curr_name = person["NAME"]
         curr_alive = person["ALIVE"]
-        if(curr_alive == False):
+        if curr_alive == False:
             deceased_list.append(curr_name)
     with open("errors.txt", "a") as errorFile:
-                errorFile.write(f"List of all deceased individuals US29: \n")
-                errorFile.write(f"{deceased_list}\n")
+        errorFile.write(f"List of all deceased individuals US29: \n")
+        errorFile.write(f"{deceased_list}\n")
     return deceased_list
     # print("List of all deceased individuals: ")
     # print(deceased_list)
+
 
 def detect_duplicate_uid(indi_table):
     seen_uids = set()
@@ -396,97 +398,136 @@ def detect_duplicate_uid(indi_table):
 
 # us07: Less than 150 Years Old
 def check_age(indi_table):
-	over_150 = False
-	for person in indi_table:
-		#check if a person lived for 150 years or older
-		if person['AGE'] >=150 and person['ALIVE'] == False:
-			name = person['NAME']
-			uid = person['uid']
-			age = str(person['AGE'])
-			msg = 'Error: INDIVIDUAL: US07: Age of individual after death is 150 or greater, please check birth and death date: ' + name + '(' + uid + ') died at age: ' + age
-			with open("errors.txt", "a") as errorFile:
-				errorFile.write(msg + '\n')
-			over_150 = True
-        #check if a person is currently 150 years or older
-		if person['AGE'] >=150 and person['ALIVE'] == True:
-			name = person['NAME']
-			uid = person['uid']
-			age = str(person['AGE'])
-			msg = 'Error: INDIVIDUAL: US07: Current age of individual is 150 or greater, please check birthdate: ' + name + '(' + uid + ') is currently: ' + age + ' years old'
-			with open("errors.txt", "a") as errorFile:
-				errorFile.write(msg + '\n')
-			over_150 = True
-	return over_150
+    over_150 = False
+    for person in indi_table:
+        # check if a person lived for 150 years or older
+        if person["AGE"] >= 150 and person["ALIVE"] == False:
+            name = person["NAME"]
+            uid = person["uid"]
+            age = str(person["AGE"])
+            msg = (
+                "Error: INDIVIDUAL: US07: Age of individual after death is 150 or greater, please check birth and death date: "
+                + name
+                + "("
+                + uid
+                + ") died at age: "
+                + age
+            )
+            with open("errors.txt", "a") as errorFile:
+                errorFile.write(msg + "\n")
+            over_150 = True
+            # check if a person is currently 150 years or older
+        if person["AGE"] >= 150 and person["ALIVE"] == True:
+            name = person["NAME"]
+            uid = person["uid"]
+            age = str(person["AGE"])
+            msg = (
+                "Error: INDIVIDUAL: US07: Current age of individual is 150 or greater, please check birthdate: "
+                + name
+                + "("
+                + uid
+                + ") is currently: "
+                + age
+                + " years old"
+            )
+            with open("errors.txt", "a") as errorFile:
+                errorFile.write(msg + "\n")
+            over_150 = True
+    return over_150
+
 
 # us21: Correct gender for role
 def check_wife_gender(indi_table, fam_table):
 
-	wife = False
+    wife = False
 
-	wife_gender = 'F'
-	for person in indi_table:
-		#check indivdual against family table to see if they have wife tag
-		if person['uid'] == fam_table[-1]["WIFE"]:
-			name = person['NAME']
-			uid = person['uid']
-			indi_gender = person['SEX']
-			#check if gender was set to F for the wife
-			if person['SEX'] != wife_gender:
-				wife = False
-				msg = 'Error: FAMILY: US21: Incorrect gender has been used for the wife: ' + name + '(' + uid + '): Current Gender Set to ' + indi_gender + ' - should be set to ' + wife_gender
-				with open("errors.txt", "a") as errorFile:
-					errorFile.write(msg + '\n')
-			else:
-				wife = True
-	if wife == True:
-		return True
-	else:
-		return False
+    wife_gender = "F"
+    for person in indi_table:
+        # check indivdual against family table to see if they have wife tag
+        if person["uid"] == fam_table[-1]["WIFE"]:
+            name = person["NAME"]
+            uid = person["uid"]
+            indi_gender = person["SEX"]
+            # check if gender was set to F for the wife
+            if person["SEX"] != wife_gender:
+                wife = False
+                msg = (
+                    "Error: FAMILY: US21: Incorrect gender has been used for the wife: "
+                    + name
+                    + "("
+                    + uid
+                    + "): Current Gender Set to "
+                    + indi_gender
+                    + " - should be set to "
+                    + wife_gender
+                )
+                with open("errors.txt", "a") as errorFile:
+                    errorFile.write(msg + "\n")
+            else:
+                wife = True
+    if wife == True:
+        return True
+    else:
+        return False
+
 
 # us21: Correct gender for role
 def check_husband_gender(indi_table, fam_table):
-	husband = False
-	husband_gender = 'M'
-	for person in indi_table:
-		#check indivdual against family table to see if they have husband tag
-		if person['uid'] == fam_table[-1]["HUSB"]:
-			name = person['NAME']
-			uid = person['uid']
-			indi_gender = person['SEX']
-			#check if gender was set to M for the husband
-			if person['SEX'] != husband_gender:
-				husband = False
-				msg = 'Error: FAMILY: US21: Incorrect gender has been used for the husband: ' + name + '(' + uid + '): Current Gender Set to ' + indi_gender + ' - should be set to ' + husband_gender
-				with open("errors.txt", "a") as errorFile:
-					errorFile.write(msg + '\n')
-			else:
-				husband = True
-	if husband == True:
-		return True
-	else:
-		return False
-     
-#us33: List all orphaned children (both parents dead and child < 18 years old) in a GEDCOM file
+    husband = False
+    husband_gender = "M"
+    for person in indi_table:
+        # check indivdual against family table to see if they have husband tag
+        if person["uid"] == fam_table[-1]["HUSB"]:
+            name = person["NAME"]
+            uid = person["uid"]
+            indi_gender = person["SEX"]
+            # check if gender was set to M for the husband
+            if person["SEX"] != husband_gender:
+                husband = False
+                msg = (
+                    "Error: FAMILY: US21: Incorrect gender has been used for the husband: "
+                    + name
+                    + "("
+                    + uid
+                    + "): Current Gender Set to "
+                    + indi_gender
+                    + " - should be set to "
+                    + husband_gender
+                )
+                with open("errors.txt", "a") as errorFile:
+                    errorFile.write(msg + "\n")
+            else:
+                husband = True
+    if husband == True:
+        return True
+    else:
+        return False
+
+
+# us33: List all orphaned children (both parents dead and child < 18 years old) in a GEDCOM file
 def list_all_orphans(people_collection, families_collection):
 
-    # today = date.today()
-    # age = (
-    #     today.year
-    #     - datetime.strptime(indi_table[-1]["BIRT"], "%d %b %Y").year
-    # )
+    with open("errors.txt", "a") as errorFile:
+        errorFile.write("List of all orphaned individuals US33:" + "\n")
 
     for family in families_collection.find():
-        #check if there are any children in the family. If no there cannot be any orphans so move to the next family.
-        if(len(family["CHILDREN"]) == 0):
+        # check if there are any children in the family. If no there cannot be any orphans so move to the next family.
+        if len(family["CHILDREN"]) == 0:
             continue
+
         father_id = family["HUSB"]
         mother_id = family["WIFE"]
-        if(people_collection.find_one({"uid":father_id})["ALIVE"] == False and people_collection.find_one({"uid":mother_id})["ALIVE"] == False):
-             return True
-             
-
+        if (people_collection.find_one({"uid": father_id})["ALIVE"] == True or people_collection.find_one({"uid": mother_id})["ALIVE"] == True ):
+            continue
+        
+        for child_id in family["CHILDREN"]:
+            child = people_collection.find_one({"uid": child_id})
+            if(child["AGE"] < 18):
+                with open("errors.txt", "a") as errorFile:
+                    errorFile.write(f"{child['uid']} - {child['NAME']} \n")
 
     return True
+
 
 people_schema = {
     "$jsonSchema": {
@@ -522,7 +563,7 @@ family_schema = {
         #     "WIFE_NAME",
         #     "CHILDREN",
         # ],
-        #"properties": {"AGE": {"bsonType": "int"}},
+        # "properties": {"AGE": {"bsonType": "int"}},
     }
 }
 
