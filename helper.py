@@ -465,6 +465,28 @@ def check_husband_gender(indi_table, fam_table):
 		return True
 	else:
 		return False
+     
+#us33: List all orphaned children (both parents dead and child < 18 years old) in a GEDCOM file
+def list_all_orphans(people_collection, families_collection):
+
+    # today = date.today()
+    # age = (
+    #     today.year
+    #     - datetime.strptime(indi_table[-1]["BIRT"], "%d %b %Y").year
+    # )
+
+    for family in families_collection.find():
+        #check if there are any children in the family. If no there cannot be any orphans so move to the next family.
+        if(len(family["CHILDREN"]) == 0):
+            continue
+        father_id = family["HUSB"]
+        mother_id = family["WIFE"]
+        if(people_collection.find_one({"uid":father_id})["ALIVE"] == False and people_collection.find_one({"uid":mother_id})["ALIVE"] == False):
+             return True
+             
+
+
+    return True
 
 people_schema = {
     "$jsonSchema": {
