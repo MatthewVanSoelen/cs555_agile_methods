@@ -22,7 +22,7 @@ def read_error_file():
     try:
         with open("errors.txt", "r") as fstream:
             for line in fstream:
-                print(line)
+                print(line, end="")
     except:
         print(f"Unable to open file error.txt")
 
@@ -379,7 +379,7 @@ def list_all_deceased(indi_table):
         if curr_alive == False:
             deceased_list.append(curr_name)
     with open("errors.txt", "a") as errorFile:
-        errorFile.write(f"List of all deceased individuals US29: \n")
+        errorFile.write(f"\nList of all deceased individuals US29: \n")
         errorFile.write(f"{deceased_list}\n")
     return deceased_list
     # print("List of all deceased individuals: ")
@@ -508,7 +508,7 @@ def check_husband_gender(indi_table, fam_table):
 def list_all_orphans(people_collection, families_collection):
 
     with open("errors.txt", "a") as errorFile:
-        errorFile.write("List of all orphaned individuals US33:" + "\n")
+        errorFile.write("\nList of all orphaned individuals US33:" + "\n")
 
     for family in families_collection.find():
         # check if there are any children in the family. If no there cannot be any orphans so move to the next family.
