@@ -537,6 +537,47 @@ def list_all_orphans(people_collection, families_collection):
 
     return True
 
+# us04: Marriage should occur before divorce of spouses, and divorce can only occur after marriage
+def checkDiv_Marr(families_collection):
+    for family in families_collection.find():
+        keys = family.keys()
+        if("DIV" in keys and family['DIV'] != "NA" and "MARR" in keys and family['MARR'] == "NA"):
+            with open("errors.txt", "a") as errorFile:
+                    errorFile.write(f"Error: US04: DIV present without MARR\n")
+        if ("MARR" not in keys):
+            continue
+        if("DIV" not in keys or family['DIV'] == "NA"):
+            continue
+        marr_date = get_date(family["MARR"])
+        div_date = get_date(family["DIV"])
+
+        if(div_date < marr_date):
+            with open("errors.txt", "a") as errorFile:
+                    errorFile.write(f"Error: US04: DIV before MARR\n")
+
+# us05: Marriage should occur before death of either spouse
+def checkMarr_Deat(people_collection, families_collection):
+    for family in families_collection.find():
+        keys = family.keys()
+        if ("MARR" not in keys or family['MARR'] == "NA"):
+            continue
+        marr_date = get_date(family["MARR"])
+        husb = people_collection.find_one({"uid":family["HUSB"]})
+        wife = people_collection.find_one({"uid":family["WIFE"]})
+        if (husb["DEAT"] == "NA" and wife["DEAT"] == "NA"):
+            continue
+        if (husb["DEAT"] != "NA"):
+            husb_deat_date = get_date(husb["DEAT"])
+            if(husb_deat_date < marr_date):
+                with open("errors.txt", "a") as errorFile:
+                        errorFile.write(f"Error: US05: Husband died before marrage\n")
+
+        if (wife["DEAT"] != "NA"):
+            wife_deat_date = get_date(wife["DEAT"])
+            if(wife_deat_date < marr_date):
+                with open("errors.txt", "a") as errorFile:
+                        errorFile.write(f"Error: US05: Wife died before marrage\n")
+
 
 people_schema = {
     "$jsonSchema": {
