@@ -78,8 +78,9 @@ class Test_US_01(unittest.TestCase):
         with open("errors.txt", "r") as fstream:
             for line in fstream:
                 if("US01:" in line):
-                    self.assertTrue(False)
-            self.assertTrue(True)
+                    self.assertTrue(True) # Error was printed (PASS)
+                    return
+            self.assertTrue(False) # Error did not printed (Fail)
     
     def test_BIRT_Before_Today(self):
 
@@ -135,6 +136,7 @@ class Test_US_01(unittest.TestCase):
             for line in fstream:
                 if("US01:" in line):
                     self.assertTrue(False)
+                    return
             self.assertTrue(True)
 
     def test_DEAT_After_Today(self):
@@ -191,6 +193,7 @@ class Test_US_01(unittest.TestCase):
             for line in fstream:
                 if("US01:" in line):
                     self.assertTrue(True)
+                    return
             self.assertTrue(True)
 
     def test_DEAT_Before_Today(self):
@@ -247,6 +250,7 @@ class Test_US_01(unittest.TestCase):
             for line in fstream:
                 if("US01:" in line):
                     self.assertTrue(False)
+                    return
             self.assertTrue(True)
 
     def test_MARR_After_Today(self):
@@ -303,6 +307,7 @@ class Test_US_01(unittest.TestCase):
             for line in fstream:
                 if("US01:" in line):
                     self.assertTrue(True)
+                    return
             self.assertTrue(True)
 
     def tearDown(self) -> None:
