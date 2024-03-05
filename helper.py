@@ -220,10 +220,7 @@ def create_individual_table(input_list, valid_tags):
                     age = ( death.year - get_date(indi_table[-1]["BIRT"]).year )
                 else:
                     today = date.today()
-                    age = (
-                        today.year
-                        - datetime.strptime(indi_table[-1]["BIRT"], "%d %b %Y").year
-                    )
+                    age = ( today.year - get_date(indi_table[-1]["BIRT"]).year )
                 # if age < 0:
                 #     age = "NA"
             else:
@@ -567,8 +564,8 @@ def invalid_marriage(indi_table, fam_table):
 	invalid = False
 	for person in indi_table:
 		if person['uid'] == fam_table[-1]["WIFE"] or person['uid'] == fam_table[-1]['HUSB']:
-			marriage = str(datetime.strptime(fam_table[-1]["MARR"], "%d %b %Y"))
-			birth = str(datetime.strptime(person["BIRT"], "%d %b %Y"))
+			marriage = str(get_date(fam_table[-1]["MARR"]))
+			birth = str(get_date(person["BIRT"]))
 			if marriage <= birth:
 				name = person['NAME']
 				uid = person['uid']
@@ -588,8 +585,8 @@ def invalid_death(indi_table):
 	death = ''
 	for person in indi_table:
 		if person['DEAT'] != 'NA':
-			death = str(datetime.strptime(person["DEAT"], "%d %b %Y"))
-		birth = str(datetime.strptime(person["BIRT"], "%d %b %Y"))
+			death = str(get_date(person["DEAT"]))
+		birth = str(get_date(person["BIRT"]))
 		if death != '' and person['ALIVE'] == False and death < birth:
 			name = person['NAME']
 			uid = person['uid']
