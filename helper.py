@@ -212,8 +212,8 @@ def create_individual_table(input_list, valid_tags):
                         today.year
                         - datetime.strptime(indi_table[-1]["BIRT"], "%d %b %Y").year
                     )
-                if age < 0:
-                    age = "NA"
+                # if age < 0:
+                #     age = "NA"
             else:
                 age = "NA"
             indi_table[-1].update({"AGE": age})
@@ -399,7 +399,7 @@ def check_age(indi_table):
 	over_150 = False
 	for person in indi_table:
 		#check if a person lived for 150 years or older
-		if person['AGE'] >=150 and person['ALIVE'] == False:
+		if type(person['AGE']) is int and person['AGE'] >=150 and person['ALIVE'] == False:
 			name = person['NAME']
 			uid = person['uid']
 			age = str(person['AGE'])
@@ -408,7 +408,7 @@ def check_age(indi_table):
 				errorFile.write(msg + '\n')
 			over_150 = True
         #check if a person is currently 150 years or older
-		if person['AGE'] >=150 and person['ALIVE'] == True:
+		if type(person['AGE']) is int and person['AGE'] >=150 and person['ALIVE'] == True:
 			name = person['NAME']
 			uid = person['uid']
 			age = str(person['AGE'])
@@ -465,6 +465,47 @@ def check_husband_gender(indi_table, fam_table):
 		return True
 	else:
 		return False
+
+# us02: Birth Before Marriage - check that married individuals were born before they got married
+def invalid_marriage(indi_table, fam_table):
+	invalid = False
+	for person in indi_table:
+		if person['uid'] == fam_table[-1]["WIFE"] or person['uid'] == fam_table[-1]['HUSB']:
+			marriage = str(datetime.strptime(fam_table[-1]["MARR"], "%d %b %Y"))
+			birth = str(datetime.strptime(person["BIRT"], "%d %b %Y"))
+			if marriage <= birth:
+				name = person['NAME']
+				uid = person['uid']
+				birthday = person['BIRT']
+				marr_date = fam_table[-1]['MARR']
+				msg = 'Error: INDIVIDUAL: US02: Individual was recorded as married before they were born, please check birth and marriage date: ' + name + '(' + uid + ')\nBirthday: ' + birthday + '\nMarriage Date: ' + marr_date 
+				with open("errors.txt", "a") as errorFile:
+					errorFile.write(msg + '\n')
+				invalid = True
+			else:
+				invalid = False
+	return invalid
+
+# us03: Birth Before Death - check that married individuals were born before they died
+def invalid_death(indi_table):
+	invalid = False
+	death = ''
+	for person in indi_table:
+		if person['DEAT'] != 'NA':
+			death = str(datetime.strptime(person["DEAT"], "%d %b %Y"))
+		birth = str(datetime.strptime(person["BIRT"], "%d %b %Y"))
+		if death != '' and person['ALIVE'] == False and death < birth:
+			name = person['NAME']
+			uid = person['uid']
+			birthday = person['BIRT']
+			death_date = person['DEAT']
+			msg = 'Error: INDIVIDUAL: US03: Individual was recorded as dead before they were born, please check birth and death date: ' + name + '(' + uid + ')\nBirthday: ' + birthday + '\nDeath: ' + death_date
+			with open("errors.txt", "a") as errorFile:
+				errorFile.write(msg + '\n')
+			invalid = True
+		else:
+			invalid = False
+	return invalid
 
 people_schema = {
     "$jsonSchema": {
