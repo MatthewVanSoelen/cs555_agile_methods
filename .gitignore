@@ -1,1 +1,4 @@
 errors.txt
+
+*.cpython*
+*pycache*

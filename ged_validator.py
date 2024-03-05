@@ -59,4 +59,7 @@ check_husband_gender(indi_table, fam_table)
 check_wife_gender(indi_table, fam_table)
 invalid_death(indi_table)
 invalid_marriage(indi_table, fam_table)
+checkDiv_Marr(db_fam_col)
+checkMarr_Deat(db_indi_col, db_fam_col)
+list_all_orphans(db_indi_col, db_fam_col) # Must be last in order to print output correctly
 read_error_file()
