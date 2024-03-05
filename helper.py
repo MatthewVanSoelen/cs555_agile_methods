@@ -475,6 +475,60 @@ def check_wife_gender(indi_table, fam_table):
     else:
         return False
 
+# us01: Dates (birth, marriage, divorce, death) should not be after the current date
+def no_dates_after_current(people_collection, families_collection):
+    #get today's date to compare our other dates to
+    #use datetime.now to match the datetime.datetime format that is being used in the return of the get_date function
+    today = datetime.now()
+
+    for family in families_collection.find():
+        keys = family.keys()
+        if("DIV" in keys and family['DIV'] != "NA"):
+            div_date = get_date(family["DIV"])
+            if(today < div_date):
+                with open("errors.txt", "a") as errorFile:
+                        errorFile.write(f"Error: US01: DIV occurs after current date\n")
+        if("MARR" in keys and family['MARR'] != "NA"):
+            marr_date = get_date(family["MARR"])
+            if(today < marr_date):
+                with open("errors.txt", "a") as errorFile:
+                        errorFile.write(f"Error: US01: MARR occurs after current date\n")
+    
+    for people in people_collection.find():
+        keys = people.keys()
+        if("BIRT" in keys and people['BIRT'] != "NA"):
+            birth_date = get_date(people["BIRT"])
+            if(today < birth_date):
+                with open("errors.txt", "a") as errorFile:
+                        errorFile.write(f"Error: US01: BIRT occurs after current date\n")
+        if("DEAT" in keys and people['DEAT'] != "NA"):
+            death_date = get_date(people["DEAT"])
+            if(today < death_date):
+                with open("errors.txt", "a") as errorFile:
+                        errorFile.write(f"Error: US01: DEAT occurs after current date\n")
+
+# us06: Divorce can only occur before death of both spouses
+def checkDiv_Deat(people_collection, families_collection):
+    for family in families_collection.find():
+        keys = family.keys()
+        if ("DIV" not in keys or family['DIV'] == "NA"):
+            continue
+        div_date = get_date(family["DIV"])
+        husb = people_collection.find_one({"uid":family["HUSB"]})
+        wife = people_collection.find_one({"uid":family["WIFE"]})
+        if (husb["DEAT"] == "NA" and wife["DEAT"] == "NA"):
+            continue
+        if (husb["DEAT"] != "NA"):
+            husb_deat_date = get_date(husb["DEAT"])
+            if(husb_deat_date < div_date):
+                with open("errors.txt", "a") as errorFile:
+                        errorFile.write(f"Error: US06: Husband died before divorce\n")
+
+        if (wife["DEAT"] != "NA"):
+            wife_deat_date = get_date(wife["DEAT"])
+            if(wife_deat_date < div_date):
+                with open("errors.txt", "a") as errorFile:
+                        errorFile.write(f"Error: US06: Wife died before divorce\n")
 
 # us21: Correct gender for role
 def check_husband_gender(indi_table, fam_table):
