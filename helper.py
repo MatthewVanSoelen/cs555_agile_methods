@@ -287,14 +287,19 @@ def create_family_table(input_list, valid_tags, indi_table):
             children = list(
                 filter(lambda child: child["FAMC"] == fam_table[-1]["uid"], indi_table)
             )
-            for i, child in enumerate(children):
-                children[i] = child["uid"]
+            
             if len(children) < 1:
                 children = "NA"
+            else:
+                children = sorted(children, key=lambda e: e['AGE'], reverse=True)
+                for i, child in enumerate(children):
+                    children[i] = child["uid"]
             fam_table[-1].update({"CHILDREN": children})
 
     return fam_table
 
+def sortFunc(e):
+    return e["AGE"]
 
 def create_pretty_indi_table(db_collection):
     indi_pretty = PrettyTable()
@@ -664,7 +669,54 @@ def checkMarr_Deat(people_collection, families_collection):
             wife_deat_date = get_date(wife["DEAT"])
             if(wife_deat_date < marr_date):
                 with open("errors.txt", "a") as errorFile:
-                        errorFile.write(f"Error: US05: Wife died before marrage\n")
+                    errorFile.write(f"Error: US05: Wife died before marrage\n")
+
+def check_male_last_names(people_collection, families_collection):
+    for family in families_collection.find():
+        full_name = people_collection.find_one({"uid":family["HUSB"]})["NAME"]
+        last_name = full_name.split(" ")
+        if len(last_name) > 1:
+            last_name = last_name[1]
+        else:
+            with open("errors.txt", "a") as errorFile:
+                errorFile.write(f"Error: US16: Husband has no last name \n")
+                return
+        for child_id in family["CHILDREN"]:
+            child = people_collection.find_one({"uid":child_id})
+            if(child["SEX"] != "M"):
+                continue
+            child_last_name = child["NAME"]
+            child_last_name = child_last_name.split(" ")
+            if len(last_name) > 1:
+                child_last_name = child_last_name[1]
+                if (last_name != child_last_name):
+                    with open("errors.txt", "a") as errorFile:
+                        errorFile.write(f"Error: US16: Child last name does not match father's last name \n")
+            else:
+                with open("errors.txt", "a") as errorFile:
+                    errorFile.write(f"Error: US16: Child has no last name \n")
+
+
+def print_ordered_children(people_collection, families_collection):
+
+    for family in families_collection.find():
+        children_pretty_table = PrettyTable()
+        children_pretty_table.field_names = [
+            "CHILD_ID",
+            "CHILD_NAME",
+            "CHILD_AGE"
+        ]
+        print(f"Family: {family['uid']}")
+        for child_id in family["CHILDREN"]:
+            child = people_collection.find_one({"uid":child_id})
+            children_pretty_table.add_row(
+            [
+                child["uid"],
+                child["NAME"],
+                child["AGE"]
+            ]
+        )
+        print(children_pretty_table)
 
 
 people_schema = {
