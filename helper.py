@@ -746,6 +746,61 @@ def print_ordered_children(people_collection, families_collection):
         print(children_pretty_table)
     return children_pretty_table
 
+#us14: check that no more than 5 children were born on the same day
+def validate_multi_births(families_collection, people_collection):
+	birthCount = 1
+	birthList = []
+	compare_birth = ''
+	for family in families_collection.find():
+		children = family["CHILDREN"]
+		if len(children) < 5:
+			continue
+		else:
+			for c_id in children:
+				child = people_collection.find_one({"uid":c_id})
+				birthList.append(child["BIRT"])
+	for birthday in birthList:
+		if birthday == compare_birth:
+			birthCount+=1
+		compare_birth = birthday
+	if birthCount > 5:
+		msg = 'ANOMALY: FAMILY: US14: More than 5 children born on the same day'
+		with open("errors.txt", "a") as errorFile:
+			errorFile.write(msg + '\n')
+		return True
+	else:
+		return False
+
+#us12: check mother is not 60 year or older and father is not 80 years or older than their children
+def parent_age_check(families_collection, people_collection):
+	children = []
+
+	for family in families_collection.find():
+		if len(family["CHILDREN"]) == 0:
+			continue
+		f_id = family["HUSB"]
+		m_id = family["WIFE"]
+		
+		father = people_collection.find_one({"uid": f_id})
+		mother = people_collection.find_one({"uid": m_id})
+   	
+		for c_id in family["CHILDREN"]:
+			child = people_collection.find_one({"uid":c_id})
+			children.append(child)
+   
+		for child in children:
+			if (mother["AGE"] - child["AGE"]) >= 60:
+				msg = 'ANOMALY: FAMILY: US12: Mother is 60 years or older than child'
+				with open("errors.txt", "a") as errorFile:
+					errorFile.write(msg + '\n')
+				return True
+			elif (father["AGE"] - child["AGE"]) >= 80:
+				msg = 'ANOMALY: FAMILY: US12: Father is 80 years or older than child'
+				with open("errors.txt", "a") as errorFile:
+					errorFile.write(msg + '\n')
+				return True
+			else:
+				return False
 
 people_schema = {
     "$jsonSchema": {
