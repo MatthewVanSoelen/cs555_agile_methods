@@ -2,7 +2,7 @@ from datetime import datetime
 from datetime import date
 from prettytable import PrettyTable
 import pymongo
-
+import pdb
 
 def file_to_array(filename):
     input_list = []
@@ -683,6 +683,7 @@ def check_male_last_names(people_collection, families_collection):
                 return
         for child_id in family["CHILDREN"]:
             child = people_collection.find_one({"uid":child_id})
+            # pdb.set_trace()
             if(child["SEX"] != "M"):
                 continue
             child_last_name = child["NAME"]
@@ -700,6 +701,8 @@ def check_male_last_names(people_collection, families_collection):
 def print_ordered_children(people_collection, families_collection):
 
     for family in families_collection.find():
+        if(family["CHILDREN"] == "NA"): 
+            return "NA"
         children_pretty_table = PrettyTable()
         children_pretty_table.field_names = [
             "CHILD_ID",
@@ -717,6 +720,7 @@ def print_ordered_children(people_collection, families_collection):
             ]
         )
         print(children_pretty_table)
+    return children_pretty_table
 
 
 people_schema = {
