@@ -2,7 +2,6 @@ from datetime import datetime
 from datetime import date
 from prettytable import PrettyTable
 import pymongo
-import pdb
 
 def file_to_array(filename):
     input_list = []
@@ -297,9 +296,6 @@ def create_family_table(input_list, valid_tags, indi_table):
             fam_table[-1].update({"CHILDREN": children})
 
     return fam_table
-
-def sortFunc(e):
-    return e["AGE"]
 
 def create_pretty_indi_table(db_collection):
     indi_pretty = PrettyTable()
@@ -712,7 +708,6 @@ def check_male_last_names(people_collection, families_collection):
                 return
         for child_id in family["CHILDREN"]:
             child = people_collection.find_one({"uid":child_id})
-            # pdb.set_trace()
             if(child["SEX"] != "M"):
                 continue
             child_last_name = child["NAME"]
