@@ -504,6 +504,35 @@ def no_dates_after_current(people_collection, families_collection):
                 with open("errors.txt", "a") as errorFile:
                         errorFile.write(f"Error: US01: DEAT occurs after current date\n")
 
+# us10: Marriage should be at least 14 years after birth of both spouses (parents must be at least 14 years old)
+def no_marriage_before_14(people_collection):
+    #get today's date to compare our other dates to
+    #use datetime.now to match the datetime.datetime format that is being used in the return of the get_date function
+    today = datetime.now()
+
+    for people in people_collection.find():
+        keys = people.keys()
+        if("FAMS" in keys and people['FAMS'] != "NA"):
+            age = people["AGE"]
+            if(age < 14):
+                with open("errors.txt", "a") as errorFile:
+                        errorFile.write(f"Error: US10: Married Individual is younger than 14\n")
+
+# us25: No more than one child with the same name and birth date should appear in a family
+def unique_name_and_birthdates(people_collection):
+    seen = set()
+    for people in people_collection.find():
+        if(people['FAMC'] == "NA"):
+            continue
+        name = people["NAME"]
+        birthdate = people["BIRT"]
+        family = people["FAMC"]
+        key = (name, birthdate, family)
+        if key in seen:
+            with open("errors.txt", "a") as errorFile:
+                        errorFile.write(f"Error: US25: a child in a family has a duplicate name and birthday\n")
+        seen.add(key)
+
 # us06: Divorce can only occur before death of both spouses
 def checkDiv_Deat(people_collection, families_collection):
     for family in families_collection.find():
